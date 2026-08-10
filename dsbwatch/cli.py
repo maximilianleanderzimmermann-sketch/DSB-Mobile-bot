@@ -33,13 +33,24 @@ def _env(name: str) -> str:
 
 def _telegram(required: bool = True) -> notify.Telegram | None:
     token, chat_id = _env("TELEGRAM_TOKEN"), _env("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
+    fehlend = [n for n, v in (("TELEGRAM_TOKEN", token), ("TELEGRAM_CHAT_ID", chat_id)) if not v]
+    if fehlend:
         if required:
             raise notify.NotifyError(
-                "TELEGRAM_TOKEN oder TELEGRAM_CHAT_ID fehlt (siehe .env.example)."
+                f"{' und '.join(fehlend)} ist leer. Lokal: .env — auf GitHub: "
+                "Settings → Secrets and variables → Actions."
             )
         return None
     return notify.Telegram(token, chat_id)
+
+
+def _print_env_report() -> None:
+    """Zeigt im CI-Log, welche Variablen ankommen — ohne die Werte zu verraten."""
+    print("\nZustand der Umgebungsvariablen:", file=sys.stderr)
+    for name in ("DSB_USER", "DSB_PASSWORD", "TELEGRAM_TOKEN", "TELEGRAM_CHAT_ID"):
+        value = _env(name)
+        status = f"gesetzt ({len(value)} Zeichen)" if value else "LEER"
+        print(f"  {name:<18} {status}", file=sys.stderr)
 
 
 def _fetch_plans() -> list[client.PlanRef]:
@@ -290,4 +301,5 @@ def main(argv: list[str] | None = None) -> int:
         return args.func(args)
     except (client.DsbError, notify.NotifyError) as exc:
         print(f"Fehler: {exc}", file=sys.stderr)
+        _print_env_report()
         return 1
