@@ -1,0 +1,50 @@
+# Deine Kurse. Nur Zeilen des Vertretungsplans, die hier matchen, lösen eine
+# Benachrichtigung aus.
+#
+# ACHTUNG GROSS-/KLEINSCHREIBUNG: Im Jahrgangsraster gibt es Kurse, die sich NUR
+# durch die Schreibweise unterscheiden — z.B. "ma102" (dein Grundkurs) und
+# "MA102" (ein Leistungskurs). Deshalb steht ignore_case auf false. Nicht auf
+# true stellen, sonst bekommst du fremde Kurse mitgemeldet.
+ignore_case: false
+
+# Neben dem Untis-Plan hängt die Schule täglich ein Infoblatt als PNG aus
+# ("Bereitschaft", Raumsperrungen, Sextaneraufnahme ...). Darin lässt sich nicht
+# nach Kursen filtern — es kommt als Bild, sobald es sich ändert. Das ist etwa
+# ein Bild pro Schultag. Auf false setzen, wenn dir das zu viel ist.
+notify_on_images: true
+
+# "match" = alle Begriffe müssen in der Zeile vorkommen (UND-Verknüpfung).
+# Der Lehrer steht als zweiter Begriff mit drin, wo er die Zuordnung eindeutiger
+# macht — falls das zu streng ist, den Lehrer einfach löschen.
+courses:
+  - label: "Englisch LK"
+    match: ["EN101"]
+
+  - label: "Sport LK"
+    match: ["SP202"]
+
+  - label: "Deutsch"
+    match: ["de103"]
+
+  - label: "Mathe"
+    match: ["ma102"]
+
+  - label: "Physik"
+    match: ["ph101"]
+
+  - label: "Geschichte"
+    match: ["ge206"]
+
+  - label: "PoWi"
+    match: ["pw105"]
+
+  - label: "Religion (kath.)"
+    match: ["rk107"]
+
+  - label: "Tutorium"
+    match: ["Tut1"]
+
+# Einzelbegriffe, die immer melden — für Aushänge ohne Kursbezug.
+# Beispiel: eine Zeile, die den ganzen Jahrgang betrifft.
+always_notify: []
+  # - "Jg. 13 frei"
