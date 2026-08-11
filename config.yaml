@@ -9,9 +9,12 @@ ignore_case: false
 
 # Neben dem Untis-Plan hängt die Schule täglich ein Infoblatt als PNG aus
 # ("Bereitschaft", Raumsperrungen, Sextaneraufnahme ...). Darin lässt sich nicht
-# nach Kursen filtern — es kommt als Bild, sobald es sich ändert. Das ist etwa
-# ein Bild pro Schultag. Auf false setzen, wenn dir das zu viel ist.
-notify_on_images: true
+# nach Kursen filtern.
+#
+# Bewusst AUS: Das Blatt wird im Lauf des Tages mehrfach überarbeitet, und jede
+# Fassung hat eine andere Prüfsumme — das gab eine Nachricht nach der anderen,
+# ohne dass sich für die eigenen Kurse etwas geändert hätte.
+notify_on_images: false
 
 # "match" = alle Begriffe müssen in der Zeile vorkommen (UND-Verknüpfung).
 # Der Lehrer steht als zweiter Begriff mit drin, wo er die Zuordnung eindeutiger
