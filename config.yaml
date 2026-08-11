@@ -7,14 +7,41 @@
 # true stellen, sonst bekommst du fremde Kurse mitgemeldet.
 ignore_case: false
 
-# Neben dem Untis-Plan hängt die Schule täglich ein Infoblatt als PNG aus
-# ("Bereitschaft", Raumsperrungen, Sextaneraufnahme ...). Darin lässt sich nicht
-# nach Kursen filtern.
-#
-# Bewusst AUS: Das Blatt wird im Lauf des Tages mehrfach überarbeitet, und jede
-# Fassung hat eine andere Prüfsumme — das gab eine Nachricht nach der anderen,
-# ohne dass sich für die eigenen Kurse etwas geändert hätte.
+# Das ganze Infoblatt als Bild verschicken, sobald sich die Prüfsumme ändert.
+# Bewusst AUS: Das Blatt wird im Lauf des Tages mehrfach neu erzeugt, das gab
+# eine Nachricht nach der anderen. Ersetzt durch info_sheet weiter unten, das
+# einzelne Meldungen vergleicht statt des ganzen Bildes.
 notify_on_images: false
+
+# Das tägliche Infoblatt per Texterkennung auswerten und nur die Meldungen
+# schicken, die dich betreffen.
+#
+# Das Blatt ist zweispaltig: links der Empfänger ("Alle:", "Jg. 6:", "HAB:"),
+# rechts die Meldung. Gemeldet wird ein Block, wenn sein Empfänger unter
+# "for_me" steht. Verglichen wird Meldung für Meldung — eine neue Fassung des
+# Blatts allein löst also nichts aus.
+info_sheet:
+  enabled: true
+
+  # Empfänger, die dich meinen. Groß-/Kleinschreibung und Umlaute sind egal:
+  # das OCR-Modell kennt keine Umlaute ("Jg." statt "Jg", "Pad." statt "Päd."),
+  # deshalb wird vor dem Vergleich beidseitig normalisiert.
+  for_me:
+    - "Alle"
+    - "Jg. 13"
+    - "Jahrgang 13"
+    - "Q4"
+
+  # Zeilen über die volle Blattbreite haben keinen Empfänger (z.B. "Große Halle
+  # 1.-4. Stunde nicht verfügbar"). Auf true setzen, wenn du die auch willst —
+  # dann kommt allerdings auch schulweites Beiwerk mit.
+  include_general: false
+
+  # Nie melden, egal wo es steht.
+  ignore:
+    - "Sextaner"
+    - "Bereitschaft"
+    - "Pausenkonferenz"
 
 # "match" = alle Begriffe müssen in der Zeile vorkommen (UND-Verknüpfung).
 # Der Lehrer steht als zweiter Begriff mit drin, wo er die Zuordnung eindeutiger

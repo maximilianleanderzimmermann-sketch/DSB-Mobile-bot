@@ -3,3 +3,5 @@ beautifulsoup4>=4.12
 lxml>=5.1
 PyYAML>=6.0
 python-dotenv>=1.0
+# Texterkennung fuer das taegliche Infoblatt (reines pip-Paket, kein Systempaket)
+rapidocr-onnxruntime>=1.2

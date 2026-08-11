@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from dsbwatch.infosheet import InfoConfig
 from dsbwatch.parse import Entry
 
 
@@ -30,6 +31,7 @@ class Config:
     ignore_case: bool = True
     notify_all: bool = False
     notify_on_images: bool = True
+    info: InfoConfig = field(default_factory=InfoConfig)
 
     def label_for(self, entry: Entry) -> str | None:
         """Label der ersten passenden Regel, sonst None."""
@@ -82,11 +84,21 @@ def load_config(path: str | Path) -> Config:
 
     if not rules:
         notify_all = True
+
+    roh_info = data.get("info_sheet") or {}
+    info = InfoConfig(
+        enabled=bool(roh_info.get("enabled", False)),
+        for_me=tuple(str(t) for t in (roh_info.get("for_me") or ())),
+        include_general=bool(roh_info.get("include_general", True)),
+        ignore=tuple(str(t) for t in (roh_info.get("ignore") or ())),
+    )
+
     return Config(
         rules=rules,
         ignore_case=ignore_case,
         notify_all=notify_all,
         notify_on_images=notify_on_images,
+        info=info,
     )
 
 

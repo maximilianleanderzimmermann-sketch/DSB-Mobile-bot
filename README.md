@@ -91,8 +91,34 @@ Bemerkung gleichzeitig.
    neuer Fingerabdruck ⇒ es wird gemeldet. Unveränderte Zeilen bleiben still.
 5. `notify.py` schickt eine gebündelte Nachricht pro Lauf.
 
-Das Infoblatt lässt sich nicht nach Kursen filtern; es wird als Bild verschickt, sobald sich
-seine Prüfsumme ändert (`notify_on_images: false` schaltet das ab).
+## Das Infoblatt
+
+Das tägliche Infoblatt kommt nur als Bild — keine Textebene, kein PDF dahinter. `infosheet.py`
+liest es deshalb per Texterkennung (`rapidocr-onnxruntime`, reines pip-Paket, Modelle liegen
+im Wheel) und macht sich die zweispaltige Struktur zunutze:
+
+```
+Alle:        Die Pavillonhöfe sind heute in den Pausen nicht zu betreten
+KuK Jg. 5:   14:30 Uhr Päd. Konf. Jg. 5
+Große Halle 1. - 4. Stunde nicht verfügbar          <- volle Breite, ohne Empfänger
+```
+
+Links steht, wen es betrifft. Gemeldet wird ein Block, wenn sein Empfänger unter
+`info_sheet.for_me` steht. Zeilen über die volle Breite haben keinen Empfänger und kommen nur
+mit, wenn `include_general: true` gesetzt ist.
+
+Zwei Details, an denen es sonst scheitert:
+
+- **Das Empfänger-Etikett steht vertikal mittig zu seinem mehrzeiligen Text** und liegt damit
+  oft *unter* der ersten Textzeile. Zeilenweises Bündeln zerreißt Blöcke; jede Textzeile
+  bekommt deshalb das Etikett, dessen Mitte ihr am nächsten liegt.
+- **Das OCR-Modell kennt keine Umlaute** — aus „Pavillonhöfe" wird „Pavillonhofe", aus „Große"
+  wird „GroBe". `normalise()` bildet genau diese Verstümmelung nach und wird auf OCR-Text
+  *und* Suchbegriffe angewandt. Würde man stattdessen sauber nach `oe`/`ue` normalisieren,
+  fände kein Begriff mit Umlaut je seinen erkannten Gegenpart.
+
+Verglichen wird **Meldung für Meldung**, nicht die Prüfsumme des Bildes. Das Blatt wird im Lauf
+des Tages mehrfach neu erzeugt; über die Prüfsumme gäbe das eine Nachricht nach der anderen.
 
 ### Zwei Fallen, die hier schon eingebaut sind
 

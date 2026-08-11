@@ -25,6 +25,15 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      # opencv (kommt mit der Texterkennung) braucht libGL. Auf schlanken
+      # Runner-Images fehlt das und der Import stirbt mit "libGL.so.1 not found".
+      # Der Paketname wechselte mit Ubuntu 24.04 — beide Schreibweisen versuchen.
+      - name: Systembibliotheken für OpenCV
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgl1 libglib2.0-0 \
+            || sudo apt-get install -y -qq libgl1-mesa-glx libglib2.0-0
+
       - run: pip install -r requirements.txt
 
       - name: Auf Änderungen prüfen

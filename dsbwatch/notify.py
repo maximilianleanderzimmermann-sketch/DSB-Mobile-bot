@@ -147,6 +147,16 @@ def format_changes(groups: dict[str, list[tuple[str, str]]]) -> str:
     return "\n".join(lines)
 
 
+def format_notices(datum: str, notices) -> str:
+    """Meldungen des Infoblatts, die einen selbst betreffen."""
+    kopf = f"📎 <b>Infoblatt</b>{' — ' + esc(datum) if datum else ''}"
+    zeilen = [kopf]
+    for notice in notices:
+        prefix = f"<b>{esc(notice.addressee)}:</b> " if notice.addressee else ""
+        zeilen.append(f"• {prefix}{esc(notice.text)}")
+    return "\n".join(zeilen)
+
+
 def format_failure(message: str, count: int) -> str:
     return (
         f"⚠️ <b>DSB-Watcher hängt</b>\n"

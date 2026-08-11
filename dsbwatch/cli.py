@@ -12,7 +12,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from dsbwatch import client, notify, parse
+from dsbwatch import client, infosheet, notify, parse
 from dsbwatch.matching import Config, load_config, select
 from dsbwatch.state import State
 
@@ -177,8 +177,23 @@ def _check(
                 state.mark_seen(entry.fingerprint(), entry.iso_date, today)
 
     photos: list[tuple[bytes, str]] = []
-    if config.notify_on_images:
-        for plan, data in images:
+    info_neu: list[infosheet.Notice] = []
+    info_datum = ""
+
+    for plan, data in images:
+        if config.info.enabled:
+            try:
+                meldungen, datum = infosheet.parse(data, plan.title)
+            except Exception as exc:  # OCR darf den Vertretungsplan nicht mitreißen
+                print(f"Infoblatt konnte nicht gelesen werden: {exc}", file=sys.stderr)
+                continue
+            info_datum = datum or info_datum
+            for notice in infosheet.relevant(meldungen, config.info):
+                if state.is_new(notice.fingerprint()):
+                    info_neu.append(notice)
+                    if not dry_run:
+                        state.mark_seen(notice.fingerprint(), infosheet.iso_date(datum), today)
+        elif config.notify_on_images:
             digest = hashlib.sha1(data).hexdigest()
             # plan.key statt plan.url: an der URL hängt ein wechselnder Cache-Buster.
             if state.image_changed(plan.key, digest):
@@ -186,8 +201,12 @@ def _check(
                 if not dry_run:
                     state.mark_image(plan.key, digest)
 
-    message = notify.format_changes(_group(fresh)) if fresh else None
-    return message, photos
+    teile = []
+    if fresh:
+        teile.append(notify.format_changes(_group(fresh)))
+    if info_neu:
+        teile.append(notify.format_notices(info_datum, info_neu))
+    return ("\n\n".join(teile) or None), photos
 
 
 def cmd_check(args: argparse.Namespace) -> int:

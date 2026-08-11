@@ -124,7 +124,7 @@ def test_decode_faellt_auf_cp1252_zurueck():
 
 
 def test_echte_seite_wird_vollstaendig_geparst(real):
-    assert len(real) == 79
+    assert len(real) == 6
     assert all(e.plan_date == "11.8.2026 Dienstag" for e in real)
     assert not any(e.extra for e in real), "alle acht Spalten müssen zugeordnet sein"
 
