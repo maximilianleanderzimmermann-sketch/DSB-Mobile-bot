@@ -2,12 +2,14 @@
   "alerted": false,
   "fail_count": 0,
   "image_hashes": {
+    "https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/529d6acf-ba85-40a9-a9ae-f4ca9b8ea9d9/b3f5aae7-3dea-4aee-adac-05a989f65344_000.png": "36ce4dd89808d12ce22b67fcb45afa10ef8f7d4e",
     "https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/a286a46e-ba39-4335-845f-e424ab7903f8/61a0e37b-1b2a-49a2-b438-635ad2083856_000.png": "134d58b70478b9cd98ee82d36fc09a050e19ca8c"
   },
   "last_error": null,
   "seen": {
     "3cc8ac005a9edd4f": "2026-08-11",
     "784a97c6440c0992": "2026-08-13",
+    "b8636ce567bcbc77": "2026-08-11",
     "e808983d279ea26b": "2026-08-11"
   },
   "version": 1
