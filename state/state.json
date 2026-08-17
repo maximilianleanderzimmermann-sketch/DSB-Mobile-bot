@@ -1,6 +1,6 @@
 {
   "alerted": false,
-  "fail_count": 0,
+  "fail_count": 1,
   "image_hashes": {
     "https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/07645ea3-7928-4370-8a9a-f21249ec9c8e/27e35e51-8780-4381-90eb-83fee9b4400f_000.png": "3f2f12b0207a73c72e9a196cccb6da250fd65deb",
     "https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/1728c351-6f84-40d4-a663-e989a1399003/d51a57e1-df53-48d3-9eb2-e5b4705b21c6_000.png": "3646ca063b199fb6312652506113417faac4a21f",
@@ -10,7 +10,7 @@
     "https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/66889ffb-d675-4a21-a951-ee678f7cceb7/e17c473c-1fe9-4ed5-ab01-29311e560d31_000.png": "57a86d86b1a891eafb3d8ca6c87fffec389cf3d6",
     "https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/a286a46e-ba39-4335-845f-e424ab7903f8/61a0e37b-1b2a-49a2-b438-635ad2083856_000.png": "134d58b70478b9cd98ee82d36fc09a050e19ca8c"
   },
-  "last_error": null,
+  "last_error": "Anfrage an https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/acd1d7c4-6d19-4b2a-9abf-5b63a77225f1/b28b487f-4868-42dc-9d7e-70ea3d9da9a7_000.png?639225787141394384 fehlgeschlagen: 404 Client Error: Not Found for url: https://light.dsbcontrol.de/DSBlightWebsite/Data/d96553e1-c205-46d6-998e-cc9676bd6046/acd1d7c4-6d19-4b2a-9abf-5b63a77225f1/b28b487f-4868-42dc-9d7e-70ea3d9da9a7_000.png?639225787141394384",
   "seen": {},
   "version": 1
 }
