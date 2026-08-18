@@ -79,16 +79,27 @@ def _collect(
     entries: list[parse.Entry] = []
     images: list[tuple[client.PlanRef, bytes]] = []
     html_count = 0
+    kaputt = 0
 
     for plan in plans:
-        data = fetch(plan.url)
-        # ConType lügt an dieser Schule — im Zweifel an den ersten Bytes erkennen.
-        kind = plan.kind if plan.kind != client.KIND_UNKNOWN else client.sniff_kind(data)
-        if kind == client.KIND_IMAGE:
-            images.append((plan, data))
-        elif kind == client.KIND_HTML:
-            html_count += 1
-            entries.extend(parse.parse_plan(fetch, plan.url, plan_title=plan.title))
+        # Ein einzelnes Dokument darf den Lauf nicht mitreissen: DSB tauscht
+        # Dokumente aus, waehrend wir sie holen, dann laeuft die URL auf 404.
+        # Frueher blockierte das auch die Vertretungsmeldungen.
+        try:
+            data = fetch(plan.url)
+            # ConType lügt an dieser Schule — im Zweifel an den ersten Bytes erkennen.
+            kind = plan.kind if plan.kind != client.KIND_UNKNOWN else client.sniff_kind(data)
+            if kind == client.KIND_IMAGE:
+                images.append((plan, data))
+            elif kind == client.KIND_HTML:
+                html_count += 1
+                entries.extend(parse.parse_plan(fetch, plan.url, plan_title=plan.title))
+        except client.DsbError as exc:
+            kaputt += 1
+            print(f"{plan.filename} uebersprungen: {exc}", file=sys.stderr)
+
+    if kaputt and not entries and not images:
+        raise client.DsbError(f"Kein einziges von {kaputt} Dokument(en) war ladbar.")
 
     return entries, images, html_count
 

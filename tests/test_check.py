@@ -194,3 +194,31 @@ def test_bilder_koennen_abgeschaltet_werden(tmp_path, monkeypatch):
 
     _, photos = cli._check(State(tmp_path / "state.json"), load_config(path), dry_run=False)
     assert photos == []
+
+
+def test_ein_kaputtes_dokument_blockiert_die_kursmeldungen_nicht(tmp_path, config, monkeypatch):
+    """DSB tauscht Dokumente aus, waehrend wir sie holen — dann laeuft die URL auf 404.
+    Frueher riss das den ganzen Lauf mit, inklusive der Vertretungsmeldungen."""
+    monkeypatch.setattr(client, "get_token", lambda user, pw: "t")
+    monkeypatch.setattr(client, "get_endpoint", _endpoints(aushaenge=AUSHAENGE))
+
+    def fetch(url):
+        if url.endswith(".png") or "aushang" in url:
+            raise client.DsbError("404 Client Error: Not Found")
+        return SYNTHETIC.encode("utf-8")
+
+    monkeypatch.setattr(client, "fetch_bytes", fetch)
+
+    message, photos = cli._check(State(tmp_path / "state.json"), config, dry_run=False)
+    assert message is not None and "ma102" in message, "Kursmeldung muss trotzdem rausgehen"
+    assert photos == []
+
+
+def test_faellt_alles_aus_gilt_der_lauf_als_gescheitert(tmp_path, config, monkeypatch):
+    monkeypatch.setattr(client, "get_token", lambda user, pw: "t")
+    monkeypatch.setattr(client, "get_endpoint", _endpoints(aushaenge=AUSHAENGE))
+    monkeypatch.setattr(client, "fetch_bytes",
+                        lambda url: (_ for _ in ()).throw(client.DsbError("404")))
+
+    with pytest.raises(client.DsbError, match="Kein einziges"):
+        cli._check(State(tmp_path / "state.json"), config, dry_run=False)
