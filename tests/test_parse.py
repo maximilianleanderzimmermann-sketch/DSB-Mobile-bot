@@ -151,3 +151,43 @@ def test_echte_kurse_werden_gefunden(real):
     treffer = {entry.fach for _, entry in select(real, config)}
     assert "SP202" in treffer, "Sport-LK Raumänderung muss gemeldet werden"
     assert "MU102" not in treffer, "fremde Kurse dürfen nicht durchrutschen"
+
+
+# ------------------------------------------------------------------ Jahrgangsfilter
+
+JAHRGANG_CONFIG = (
+    'ignore_case: false\nklasse: "13"\n'
+    "courses:\n  - label: Englisch LK\n    match: ['EN101']\n"
+    'always_notify: ["Studientag"]\n'
+)
+
+
+def _mit_klasse(klasse, fach="EN101", text=""):
+    return Entry(plan_date="31.8.2026 Montag", klasse=klasse, fach=fach, art="Entfall", text=text)
+
+
+@pytest.mark.parametrize(
+    "klasse, erwartet",
+    [("13", True), ("13, 12", True), ("12, 13", True), ("12", False), ("11", False), ("", False)],
+)
+def test_kurskuerzel_gilt_nur_im_eigenen_jahrgang(tmp_path, klasse, erwartet):
+    """EN101 gibt es in Jg. 13 und in Jg. 12 — ohne Jahrgang kaeme der fremde Kurs mit."""
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(JAHRGANG_CONFIG, encoding="utf-8")
+    treffer = select([_mit_klasse(klasse)], load_config(cfg))
+    assert bool(treffer) is erwartet
+
+
+def test_jahrgang_13_matcht_nicht_auf_113_oder_131(tmp_path):
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(JAHRGANG_CONFIG, encoding="utf-8")
+    config = load_config(cfg)
+    assert select([_mit_klasse("113")], config) == []
+    assert select([_mit_klasse("131")], config) == []
+
+
+def test_always_notify_ignoriert_den_jahrgang(tmp_path):
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(JAHRGANG_CONFIG, encoding="utf-8")
+    eintrag = Entry(plan_date="31.8.2026", klasse="", fach="", text="Studientag ganze Schule")
+    assert [l for l, _ in select([eintrag], load_config(cfg))] == ["Allgemein"]

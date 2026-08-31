@@ -7,6 +7,12 @@
 # true stellen, sonst bekommst du fremde Kurse mitgemeldet.
 ignore_case: false
 
+# Jahrgang, der in der Klassen-Spalte des Plans stehen muss.
+# Kurskuerzel sind NICHT eindeutig: "EN101" gibt es in Jahrgang 13 UND in
+# Jahrgang 12. Ohne diese Schranke kaemen fremde Jahrgaenge mit.
+# Kombinationen wie "13, 12" zaehlen mit, "12" allein nicht.
+klasse: "13"
+
 # Das ganze Infoblatt als Bild verschicken, sobald sich die Prüfsumme ändert.
 # Bewusst AUS: Das Blatt wird im Lauf des Tages mehrfach neu erzeugt, das gab
 # eine Nachricht nach der anderen. Ersetzt durch info_sheet weiter unten, das

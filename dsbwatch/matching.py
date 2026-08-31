@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -16,6 +17,8 @@ class Rule:
     label: str
     match: tuple[str, ...]
     exclude: tuple[str, ...] = ()
+    # Aushaenge ohne Kursbezug sollen unabhaengig vom Jahrgang durchkommen.
+    ignoriert_jahrgang: bool = False
 
     def applies_to(self, haystack: str) -> bool:
         if not self.match:
@@ -32,14 +35,27 @@ class Config:
     notify_all: bool = False
     notify_on_images: bool = True
     info: InfoConfig = field(default_factory=InfoConfig)
+    # Jahrgang, der in der Klassen-Spalte stehen muss. Kurskuerzel sind NICHT
+    # eindeutig: "EN101" gibt es in Jg. 13 und in Jg. 12. Ohne diese Schranke
+    # kaemen fremde Jahrgaenge mit.
+    klasse: str = ""
+
+    def gilt_fuer_meinen_jahrgang(self, entry: Entry) -> bool:
+        if not self.klasse:
+            return True
+        # Die Spalte enthaelt auch Kombinationen wie "13, 12" — als ganzes Wort suchen.
+        return bool(re.search(rf"(?<!\d){re.escape(self.klasse)}(?!\d)", entry.klasse))
 
     def label_for(self, entry: Entry) -> str | None:
         """Label der ersten passenden Regel, sonst None."""
         haystack = entry.searchable
         if self.ignore_case:
             haystack = haystack.lower()
+        passt_jahrgang = self.gilt_fuer_meinen_jahrgang(entry)
         for rule in self.rules:
-            if rule.applies_to(haystack):
+            if not rule.applies_to(haystack):
+                continue
+            if passt_jahrgang or rule.ignoriert_jahrgang:
                 return rule.label
         return None
 
@@ -80,7 +96,8 @@ def load_config(path: str | Path) -> Config:
         )
 
     for term in data.get("always_notify") or []:
-        rules.append(Rule(label="Allgemein", match=_terms([term], ignore_case)))
+        rules.append(Rule(label="Allgemein", match=_terms([term], ignore_case),
+                          ignoriert_jahrgang=True))
 
     if not rules:
         notify_all = True
@@ -99,6 +116,7 @@ def load_config(path: str | Path) -> Config:
         notify_all=notify_all,
         notify_on_images=notify_on_images,
         info=info,
+        klasse=str(data.get("klasse") or "").strip(),
     )
 
 

@@ -1,11 +1,17 @@
 name: Vertretungsplan prüfen
 
 on:
-  schedule:
-    # UTC. 04–17 Uhr UTC entspricht ca. 06–19 Uhr deutscher Zeit, Mo–Fr.
-    # GitHub-Cron ist nicht pünktlich: 5–20 Min Verspätung sind normal.
-    - cron: "*/15 4-17 * * 1-5"
+  # workflow_dispatch ist der EIGENTLICHE Ausloeser: ein externer Cron-Dienst
+  # ruft alle 15 Minuten die GitHub-API auf. Grund: GitHubs eigener schedule ist
+  # unzuverlaessig. Gemessen ueber drei Wochen kamen statt 56 Laeufen pro Tag nur
+  # 18-26 an, und vom 27.8. bis 31.8. fiel er komplett aus — deshalb blieb der
+  # Englisch-Entfall am 31.8. unbemerkt. Laeufe werden unter Last nicht nur
+  # verzoegert, sondern ersatzlos verworfen.
   workflow_dispatch:
+
+  # Nur noch als Notnagel, falls der externe Ausloeser ausfaellt.
+  schedule:
+    - cron: "*/30 3-19 * * 1-5"
 
 concurrency:
   group: dsb-check
