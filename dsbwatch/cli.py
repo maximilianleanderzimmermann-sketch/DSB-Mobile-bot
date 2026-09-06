@@ -182,10 +182,12 @@ def _check(
     today = date.today()
     fresh: list[tuple[str, parse.Entry]] = []
     for label, entry in select(entries, config):
-        if state.is_new(entry.fingerprint()):
+        fingerprint = entry.fingerprint()
+        if state.is_new(fingerprint):
             fresh.append((label, entry))
-            if not dry_run:
-                state.mark_seen(entry.fingerprint(), entry.iso_date, today)
+        # Auch bekannte Eintraege auffrischen, solange sie im Plan stehen.
+        if not dry_run:
+            state.mark_seen(fingerprint, entry.iso_date, today)
 
     photos: list[tuple[bytes, str]] = []
     info_neu: list[infosheet.Notice] = []
@@ -200,10 +202,11 @@ def _check(
                 continue
             info_datum = datum or info_datum
             for notice in infosheet.relevant(meldungen, config.info):
-                if state.is_new(notice.fingerprint()):
+                fingerprint = notice.fingerprint()
+                if state.is_new(fingerprint):
                     info_neu.append(notice)
-                    if not dry_run:
-                        state.mark_seen(notice.fingerprint(), infosheet.iso_date(datum), today)
+                if not dry_run:
+                    state.mark_seen(fingerprint, infosheet.iso_date(datum), today)
         elif config.notify_on_images:
             digest = hashlib.sha1(data).hexdigest()
             # plan.key statt plan.url: an der URL hängt ein wechselnder Cache-Buster.

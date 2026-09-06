@@ -1,5 +1,7 @@
 """Durchlauf des check-Kommandos ohne Netz: Dedup, Gruppierung, Fehlerzähler."""
 
+from datetime import date
+
 import pytest
 
 from dsbwatch import cli, client
@@ -147,16 +149,15 @@ def test_falsche_zugangsdaten_schlagen_durch(tmp_path, config, monkeypatch):
 
 
 def test_fehlerzaehler_und_pruning(tmp_path):
-    from datetime import date
-
     state = State(tmp_path / "state.json")
     assert state.record_failure("kaputt") == 1
     assert state.record_failure("kaputt") == 2
     state.record_success()
     assert state.data["fail_count"] == 0
 
-    state.mark_seen("alt", "2026-08-01")
-    state.mark_seen("neu", "2026-08-20")
+    gestern = date(2026, 8, 1)
+    state.mark_seen("alt", "2026-08-01", today=gestern)     # laeuft 3 Tage spaeter ab
+    state.mark_seen("neu", "2026-08-20", today=gestern)
     assert state.prune(today=date(2026, 8, 10)) == 1
     assert "neu" in state.data["seen"] and "alt" not in state.data["seen"]
 
@@ -222,3 +223,45 @@ def test_faellt_alles_aus_gilt_der_lauf_als_gescheitert(tmp_path, config, monkey
 
     with pytest.raises(client.DsbError, match="Kein einziges"):
         cli._check(State(tmp_path / "state.json"), config, dry_run=False)
+
+
+def test_vergangener_plantag_wiederholt_sich_nicht(tmp_path, config, offline, monkeypatch):
+    """Die Schule laesst vergangene Tage im Plan stehen.
+
+    Frueher wurde so ein Eintrag gemeldet, mit dem Plandatum als Verfallsdatum
+    gemerkt und vom Aufraeumen im selben Lauf sofort wieder entfernt — und beim
+    naechsten Lauf erneut gemeldet. Alle 15 Minuten, endlos.
+    """
+    heute = date(2026, 9, 6)          # Plandatum des Fixtures (11.8.) liegt lange zurueck
+
+    class FesterTag(date):
+        @classmethod
+        def today(cls):
+            return heute
+
+    monkeypatch.setattr(cli, "date", FesterTag)
+    state = State(tmp_path / "state.json")
+
+    message, _ = cli._check(state, config, dry_run=False)
+    assert message is not None, "beim ersten Mal muss es kommen"
+    entfernt = state.prune(today=heute)   # genau das macht cmd_check nach jedem Lauf
+    assert entfernt == 0, "was gerade gemeldet wurde, darf nicht sofort verfallen"
+
+    nochmal, _ = cli._check(state, config, dry_run=False)
+    assert nochmal is None, "ein vergangener Plantag darf sich nicht wiederholen"
+
+
+def test_eintrag_verfaellt_erst_wenn_er_aus_dem_plan_verschwindet(tmp_path):
+    state = State(tmp_path / "state.json")
+    montag = date(2026, 9, 7)
+
+    state.mark_seen("x", "2026-09-04", today=montag)          # Plandatum liegt zurueck
+    assert state.prune(today=montag) == 0
+    assert state.prune(today=date(2026, 9, 9)) == 0, "noch in der Schonfrist"
+
+    # Solange der Eintrag im Plan steht, frischt ihn jeder Lauf auf.
+    state.mark_seen("x", "2026-09-04", today=date(2026, 9, 9))
+    assert state.prune(today=date(2026, 9, 11)) == 0
+
+    # Ab jetzt taucht er nicht mehr auf, also kein mark_seen mehr.
+    assert state.prune(today=date(2026, 9, 13)) == 1

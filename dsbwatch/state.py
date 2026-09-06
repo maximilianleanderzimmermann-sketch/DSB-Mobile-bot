@@ -12,8 +12,11 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
-# Einträge ohne erkennbares Plandatum so lange behalten, bevor sie verfallen.
-UNDATED_TTL_DAYS = 14
+# Ein Eintrag verfaellt erst, wenn er so viele Tage lang nicht mehr im Plan
+# stand. NICHT am Plandatum: die Schule laesst vergangene Tage stehen, und ein
+# Eintrag von gestern wurde sonst im selben Lauf gemerkt und sofort wieder
+# weggeraeumt — und damit beim naechsten Lauf erneut gemeldet, endlos.
+GRACE_DAYS = 3
 
 # Bewusst OHNE Auth-Token: state.json wird ins Repo committet, und das Token ist
 # ein Zugangsschlüssel. Ein /authid-Request pro Lauf ist billiger als ein Secret,
@@ -57,9 +60,18 @@ class State:
         return fingerprint not in self.data["seen"]
 
     def mark_seen(self, fingerprint: str, iso_date: str, today: date | None = None) -> None:
+        """Merkt den Eintrag und frischt sein Verfallsdatum auf.
+
+        Wird bei JEDEM Lauf fuer jeden gesehenen Eintrag aufgerufen, auch fuer
+        laengst bekannte — nur so verfaellt ein Eintrag erst, wenn er wirklich
+        aus dem Plan verschwunden ist.
+        """
         today = today or date.today()
-        fallback = (today + timedelta(days=UNDATED_TTL_DAYS)).isoformat()
-        self.data["seen"][fingerprint] = iso_date or fallback
+        # Vergangene Plandaten zaehlen ab heute, sonst waere der Eintrag sofort
+        # wieder faellig fuers Aufraeumen.
+        basis = max(iso_date, today.isoformat()) if iso_date else today.isoformat()
+        keep_until = (date.fromisoformat(basis) + timedelta(days=GRACE_DAYS)).isoformat()
+        self.data["seen"][fingerprint] = keep_until
 
     def prune(self, today: date | None = None) -> int:
         """Wirft Einträge weg, deren Plandatum vorbei ist. Gibt die Anzahl zurück."""
